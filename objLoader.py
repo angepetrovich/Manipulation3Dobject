@@ -3,6 +3,10 @@ import pygame
 from OpenGL.GL import *
 from PIL import Image
 import cv2
+import math
+import glm
+import numpy as np
+import pyrr
 
 class OBJ:
     generate_on_init = True
@@ -49,6 +53,10 @@ class OBJ:
         self.faces = []
         self.gl_list = 0
         dirname = os.path.dirname(filename)
+
+        self.position = np.array([0, 0, -4], dtype=np.float32)
+        self.eulers = np.array([0, 0, 0], dtype=np.float32)
+
 
         material = None
         for line in open(filename, "r"):
@@ -100,10 +108,10 @@ class OBJ:
 
             #mtl = self.mtl[material]
             #if 'texture_Kd' in mtl:
-                # use diffuse texmap
+            #    # use diffuse texmap
             #    glBindTexture(GL_TEXTURE_2D, mtl['texture_Kd'])
             #else:
-                # just use diffuse colour
+            #    # just use diffuse colour
             #    glColor(*mtl['Kd'])
 
             glBegin(GL_POLYGON)
@@ -167,3 +175,58 @@ class ImageLoader:
         glVertex2f(0, self.height)
         glEnd()
         glDisable(GL_TEXTURE_2D)
+
+
+
+def rotationMat(angle, x, y, z):
+    angle *= math.pi / 180.
+    mat = pyrr.matrix44.create_identity(dtype=np.float32)
+    s = math.sin(angle)
+    c = math.cos(angle)
+
+    mat[0][0] = x * x * (1 - c) + c
+    mat[0][1] = x * y * (1 - c) - z * s
+    mat[0][2] = x * z * (1 - c) + y * s
+    mat[1][0] = y * x * (1 - c) + z * s
+    mat[1][1] = y * y * (1 - c) + c
+    mat[1][2] = y * z * (1 - c) - x * s
+    mat[2][0] = x * z * (1 - c) - y * s
+    mat[2][1] = y * z * (1 - c) + x * s
+    mat[2][2] = z * z * (1 - c) + c
+
+    return mat
+
+def mul( m1,  m2):
+    mat = pyrr.matrix44.create_identity(dtype=np.float32)
+    #print(mat)
+    #print (m1)
+    #print(m2)
+    mat[0][0] = m1[0][0] * m2[0][0] + m1[0][1] * m2[1][0] + m1[0][2] * m2[2][0] + m1[0][3] * m2[3][0]
+    mat[0][1] = m1[0][0] * m2[0][1] + m1[0][1] * m2[1][1] + m1[0][2] * m2[2][1] + m1[0][3] * m2[3][1]
+    mat[0][2] = m1[0][0] * m2[0][2] + m1[0][1] * m2[1][2] + m1[0][2] * m2[2][2] + m1[0][3] * m2[3][2]
+    mat[0][3] = m1[0][0] * m2[0][3] + m1[0][1] * m2[1][3] + m1[0][2] * m2[2][3] + m1[0][3] * m2[3][3]
+
+    mat[1][0] = m1[1][0] * m2[0][0] + m1[1][1] * m2[1][0] + m1[1][2] * m2[2][0] + m1[1][3] * m2[3][0]
+    mat[1][1] = m1[1][0] * m2[0][1] + m1[1][1] * m2[1][1] + m1[1][2] * m2[2][1] + m1[1][3] * m2[3][1]
+    mat[1][2] = m1[1][0] * m2[0][2] + m1[1][1] * m2[1][2] + m1[1][2] * m2[2][2] + m1[1][3] * m2[3][2]
+    mat[1][3] = m1[1][0] * m2[0][3] + m1[1][1] * m2[1][3] + m1[1][2] * m2[2][3] + m1[1][3] * m2[3][3]
+
+    mat[2][0] = m1[2][0] * m2[0][0] + m1[2][1] * m2[1][0] + m1[2][2] * m2[2][0] + m1[2][3] * m2[3][0]
+    mat[2][1] = m1[2][0] * m2[0][1] + m1[2][1] * m2[1][1] + m1[2][2] * m2[2][1] + m1[2][3] * m2[3][1]
+    mat[2][2] = m1[2][0] * m2[0][2] + m1[2][1] * m2[1][2] + m1[2][2] * m2[2][2] + m1[2][3] * m2[3][2]
+    mat[2][3] = m1[2][0] * m2[0][3] + m1[2][1] * m2[1][3] + m1[2][2] * m2[2][3] + m1[2][3] * m2[3][3]
+
+    mat[3][0] = m1[3][0] * m2[0][0] + m1[3][1] * m2[1][0] + m1[3][2] * m2[2][0] + m1[3][3] * m2[3][0]
+    mat[3][1] = m1[3][0] * m2[0][1] + m1[3][1] * m2[1][1] + m1[3][2] * m2[2][1] + m1[3][3] * m2[3][1]
+    mat[3][2] = m1[3][0] * m2[0][2] + m1[3][1] * m2[1][2] + m1[3][2] * m2[2][2] + m1[3][3] * m2[3][2]
+    mat[3][3] = m1[3][0] * m2[0][3] + m1[3][1] * m2[1][3] + m1[3][2] * m2[2][3] + m1[3][3] * m2[3][3]
+
+    return mat
+
+
+def translationMat(vec):
+     mat = pyrr.matrix44.create_identity(dtype=np.float32)
+     mat[0][3] = vec[0]
+     mat[1][3] = vec[1]
+     mat[2][3] = vec[2]
+     return mat
