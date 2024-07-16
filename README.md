@@ -1,1 +1,1 @@
-###3D object manipulation based on hand tracking.
+3D object manipulation based on hand tracking.
